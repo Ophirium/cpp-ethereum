@@ -105,7 +105,8 @@ dev::eth::BlockHeader constructHeader(
 	u256 const& _timestamp,
 	bytes const& _extraData);
 void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
-void executeTests(const std::string& _name, const std::string& _testPathAppendix, const std::string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix = true);
+/// The closure doTests expects a _guard that points to any TestOutputHelper RAII object.  If nullptr is passed, a TestOutputHelper RAII object will be generated inside.
+void executeTests(const std::string& _name, const std::string& _testPathAppendix, const std::string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool, TestOutputHelper const* _guard)> doTests, TestOutputHelper const* _guard = nullptr, bool _addFillerSuffix = true);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 json_spirit::mObject fillJsonWithStateChange(eth::State const& _stateOrig, eth::State const& _statePost, eth::ChangeLog const& _changeLog);
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
@@ -116,12 +117,13 @@ json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 int createRandomTest();	//returns 0 if succeed, 1 if there was an error;
 //do*Tests(_input, _fillin) always return a filled test.
 //When _fillin is true, _input is supposed to contain a filler.  Otherwise, _input is also a filled test.
-json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin);
-json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin);
+//When _guard is nullptr, a TestOutputHelper RAII object is generated inside the call.
+json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper);
+json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper);
+json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper);
+json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper);
+json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper);
+json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper);
 void doRlpTests(json_spirit::mValue const& _input);
 void addClientInfo(json_spirit::mValue& v, std::string const& _testSource);
 void removeComments(json_spirit::mValue& _obj);

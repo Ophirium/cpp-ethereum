@@ -36,7 +36,7 @@ extern std::string const c_testExampleBlockchainTest;
 extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
-int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString);
+int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool, dev::test::TestOutputHelper const*)> _doTests, std::string const& _testString, dev::test::TestOutputHelper const&);
 
 namespace dev { namespace test {
 int createRandomTest()
@@ -49,14 +49,14 @@ int createRandomTest()
 	}
 	else
 	{
-		TestOutputHelper::initTest();
-		return fillRandomTest(dev::test::doStateTests, c_testExampleStateTest);
+		TestOutputHelper testOutputHelper;
+		return fillRandomTest(dev::test::doStateTests, c_testExampleStateTest, testOutputHelper);
 	}
 }
 }} //namespaces
 
 //Prints a generated test Json into std::out
-int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)> _doTests, std::string const& _testString)
+int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool, dev::test::TestOutputHelper const*)> _doTests, std::string const& _testString, dev::test::TestOutputHelper const& _testOutputHelper)
 {
 	bool wasError = false;
 	json_spirit::mValue v;
@@ -66,8 +66,8 @@ int fillRandomTest(std::function<json_spirit::mValue(json_spirit::mValue&, bool)
 		std::map<std::string, std::string> nullReplaceMap;
 		dev::test::RandomCode::parseTestWithTypes(newTest, nullReplaceMap);
 		json_spirit::read_string(newTest, v);
-		v = _doTests(v, true); //filltests
-		_doTests(v, false);	//checktest
+		v = _doTests(v, true, &_testOutputHelper); //filltests
+		_doTests(v, false, &_testOutputHelper); //checktest
 	}
 	catch (dev::Exception const& _e)
 	{

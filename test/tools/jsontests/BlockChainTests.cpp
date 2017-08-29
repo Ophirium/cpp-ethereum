@@ -106,16 +106,17 @@ json_spirit::mObject fillBCTest(json_spirit::mObject const& _input);
 void testBCTest(json_spirit::mObject const& _o);
 
 //percent output for many tests in one file
-json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _v, bool _fillin)
+json_spirit::mValue doBlockchainTests(json_spirit::mValue const& _v, bool _fillin, TestOutputHelper const* _testOutputHelper)
 {
-	TestOutputHelper::initTest(_v.get_obj().size());	//Count how many tests in the json object (read from .json file)
-	json_spirit::mValue ret = doBlockchainTestNoLog(_v, _fillin); //Do the test / test generation
-	TestOutputHelper::finishTest(); //Calculate the time of test execution and add it to the log
+	BOOST_REQUIRE_MESSAGE(!_testOutputHelper, "doBlockchainTests() expects a null-pointer for TestOutputHelper. If you have a TestOutputHelper object, use doBlockchainTestNoLog() instead.");
+	TestOutputHelper testOutputHelper(_v.get_obj().size());	//Count how many tests in the json object (read from .json file)
+	json_spirit::mValue ret = doBlockchainTestNoLog(_v, _fillin, &testOutputHelper); //Do the test / test generation
 	return ret;
 }
 
-json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin)
+json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper)
 {
+	BOOST_REQUIRE_MESSAGE(_testOutputHelper, "doTransitionTest() expects a non-null pointer to a TestOutputHelper object.");
 	json_spirit::mValue output = _input;
 	for (auto& i: output.get_obj())
 	{
@@ -144,8 +145,9 @@ json_spirit::mValue doTransitionTest(json_spirit::mValue const& _input, bool _fi
 	return output;
 }
 
-json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin)
+json_spirit::mValue doBlockchainTestNoLog(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _testOutputHelper)
 {
+	(void)_testOutputHelper; // doBlockchainTestNoLog() does not care about the log.
 	json_spirit::mObject tests;
 
 	// range-for is not used because iterators are necessary for removing elements later.

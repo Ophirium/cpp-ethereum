@@ -401,8 +401,11 @@ void checkCallCreates(eth::Transactions const& _resultCallCreates, eth::Transact
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool)> doTests, bool _addFillerSuffix)
+void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<json_spirit::mValue(json_spirit::mValue const&, bool, TestOutputHelper const*)> doTests, TestOutputHelper const* _inheritedTestOutputHelper, bool _addFillerSuffix)
 {
+	std::unique_ptr<TestOutputHelper> ownTestOutputHelper;
+	if (!_inheritedTestOutputHelper)
+		ownTestOutputHelper.reset(new TestOutputHelper()); // If no TestOutputHelper object is inherited, create one.
 	string testPath = getTestPath() + _testPathAppendix;
 	string testFillerPath = getTestPath() + "/src" + _fillerPathAppendix;
 
@@ -432,7 +435,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 
 			json_spirit::read_string(s, v);
 			removeComments(v);
-			json_spirit::mValue output = doTests(v, true);
+			json_spirit::mValue output = doTests(v, true, ownTestOutputHelper ? ownTestOutputHelper.get() : _inheritedTestOutputHelper);
 			addClientInfo(output, testfilename);
 			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(output, true)));
 		}
@@ -455,7 +458,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
 		Listener::notifySuiteStarted(name);
-		doTests(v, false);
+		doTests(v, false, ownTestOutputHelper ? ownTestOutputHelper.get() : _inheritedTestOutputHelper);
 	}
 	catch (Exception const& _e)
 	{

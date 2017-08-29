@@ -294,10 +294,11 @@ eth::OnOpFunc FakeExtVM::simpleTrace() const
 
 namespace dev { namespace test {
 
-json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
+json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _inheritedTestOutputHelper)
 {
-	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom")
-		TestOutputHelper::initTest(_input.get_obj().size());
+	std::unique_ptr<TestOutputHelper> ownTestOutputHelper;
+	if (!_inheritedTestOutputHelper)
+		ownTestOutputHelper.reset(new TestOutputHelper()); // If no TestOutputHelper object is inherited, create one.
 
 	json_spirit::mValue v = json_spirit::mObject();
 	json_spirit::mObject& output = v.get_obj();
@@ -472,7 +473,6 @@ json_spirit::mValue doVMTests(json_spirit::mValue const& _input, bool _fillin)
 		}
 	}
 
-	TestOutputHelper::finishTest();
 	return v;
 }
 
@@ -563,8 +563,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 
 	std::vector<boost::filesystem::path> testFiles = test::getJsonFiles(testPath);
 
-	test::TestOutputHelper::initTest();
-	test::TestOutputHelper::setMaxTests(testFiles.size());
+	test::TestOutputHelper guard{testFiles.size()};
 
 	for (auto& path: testFiles)
 	{
@@ -576,7 +575,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
 			test::Listener::notifySuiteStarted(path.filename().string());
-			doVMTests(v, false);
+			doVMTests(v, false, &guard);
 		}
 		catch (Exception const& _e)
 		{

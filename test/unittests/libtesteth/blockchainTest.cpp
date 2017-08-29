@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(fillingExpectationOnMultipleNetworks)
 	)";
 	json_spirit::mValue input;
 	json_spirit::read_string(s, input);
-	json_spirit::mValue output = doBlockchainTestNoLog(input, true);
+	json_spirit::mValue output = doBlockchainTestNoLog(input, true, nullptr);
 	BOOST_CHECK_MESSAGE(output.get_obj().size() == getNetworks().size(), "A wrong number of tests were generated.");
 }
 
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(fillingWithWrongExpectation)
 	)";
 	json_spirit::mValue input;
 	json_spirit::read_string(s, input);
-	doBlockchainTestNoLog(input, true);
+	doBlockchainTestNoLog(input, true, nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

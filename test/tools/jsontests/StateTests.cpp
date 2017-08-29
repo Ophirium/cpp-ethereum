@@ -39,8 +39,9 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin)
+json_spirit::mValue doStateTests(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _guard)
 {
+	BOOST_REQUIRE_MESSAGE(_guard, "A TestOutputHelper object should be passed to doStateTests().");
 	BOOST_REQUIRE_MESSAGE(_input.type() == obj_type,
 		TestOutputHelper::testFileName() + " A GeneralStateTest file should contain an object.");
 	BOOST_REQUIRE_MESSAGE(!_fillin || _input.get_obj().size() == 1,
@@ -141,15 +142,13 @@ public:
 
 		if (test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
-		test::TestOutputHelper::initTest(fileCount);
+		test::TestOutputHelper guard(fileCount);
 
 		for (auto const& file: files)
 		{
 			test::TestOutputHelper::setCurrentTestFileName(file.filename().string());
-			test::executeTests(file.filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests);
+			test::executeTests(file.filename().string(), "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests, &guard);
 		}
-
-		test::TestOutputHelper::finishTest();
 	}
 };
 

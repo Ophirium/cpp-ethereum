@@ -34,10 +34,11 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin)
+json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _fillin, TestOutputHelper const* _guard)
 {
+	BOOST_REQUIRE_MESSAGE(!_guard, "No TestOutputHelper object should be passed to doTransactionTests().");
 	json_spirit::mValue v = _input; // TODO: avoid copying and only add valid fields into the new object.
-	TestOutputHelper::initTest(v.get_obj().size());
+	TestOutputHelper guard{v.get_obj().size()};
 	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
 	for (auto& i: v.get_obj())
 	{
@@ -159,7 +160,6 @@ json_spirit::mValue doTransactionTests(json_spirit::mValue const& _input, bool _
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
 		}
 	}//for
-	dev::test::TestOutputHelper::finishTest();
 	return v;
 }//doTransactionTests
 
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 	else
 	{
-		dev::test::TestOutputHelper::initTest();
+		dev::test::TestOutputHelper guard;
 		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/Homestead/ttWrongRLPTransaction.json");
 	}
 }
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
 	else
 	{
-		dev::test::TestOutputHelper::initTest();
+		dev::test::TestOutputHelper guard;
 		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/ttWrongRLPTransaction.json");
 	}
 }
